@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ผลงานวันนี้</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background:#f5f5f0;
+  font-family:'Sarabun',sans-serif;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+}
+
+/* ── HEADER ── */
+.top-bar {
+  background:#fff;
+  border-bottom:1px solid #e8e8e2;
+  padding:14px 20px 12px;
+  display:flex; justify-content:space-between; align-items:flex-end;
+}
+.top-title { font-size:1.05rem; font-weight:800; color:#111; }
+.top-date  { font-size:.75rem; color:#999; }
+
+/* ── DATE PICKER (in header) ── */
+select {
+  border:1px solid #e0e0e0; background:#f9f9f7;
+  color:#333; padding:4px 10px; border-radius:6px;
+  font-family:'Sarabun',sans-serif; font-size:.8rem;
+  outline:none; cursor:pointer;
+}
+
+/* ── TEAM TOTAL BAR ── */
+.total-bar {
+  background:#111; color:#fff;
+  padding:10px 20px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.total-label { font-size:.72rem; color:#aaa; }
+.total-val   { font-size:1.3rem; font-weight:800; }
+.total-block { text-align:center; }
+.total-block:first-child { text-align:left; }
+.total-block:last-child  { text-align:right; }
+
+/* ── LIST ── */
+.list { flex:1; overflow-y:auto; padding:10px 14px 80px; }
+
+.row {
+  background:#fff; border-radius:10px;
+  padding:10px 14px; margin-bottom:8px;
+  display:flex; align-items:center; gap:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  animation:up .25s ease both;
+}
+@keyframes up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.row.me {
+  border:2px solid #111;
+  background:#fffef5;
+}
+
+/* rank */
+.rank {
+  font-size:.75rem; font-weight:800; color:#ccc;
+  min-width:22px; text-align:center; flex-shrink:0;
+}
+.rank.r1 { color:#f5a800; font-size:1rem; }
+.rank.r2 { color:#9e9e9e; font-size:.9rem; }
+.rank.r3 { color:#a0673a; font-size:.85rem; }
+
+/* name */
+.name { font-size:.95rem; font-weight:700; color:#111; flex:1; min-width:0; }
+
+/* bar area */
+.bars { flex:2; min-width:0; }
+
+.bar-line { margin-bottom:3px; display:flex; align-items:center; gap:6px; }
+.bar-line:last-child { margin-bottom:0; }
+
+.bar-icon { font-size:.65rem; color:#999; width:10px; flex-shrink:0; }
+
+.bar-wrap {
+  flex:1; height:6px; background:#eee; border-radius:3px; overflow:hidden; position:relative;
+}
+.bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
+.bar-fill.pick  { background:#16a34a; }
+.bar-fill.label { background:#38bdf8; }
+
+.avg-tick {
+  position:absolute; top:-1px; width:2px; height:8px;
+  background:rgba(0,0,0,.2); border-radius:1px;
+}
+
+.bar-num { font-size:.72rem; font-weight:700; color:#555; min-width:26px; text-align:right; flex-shrink:0; }
+.bar-num.pick  { color:#16a34a; }
+.bar-num.label { color:#0284c7; }
+
+/* avg line legend */
+.legend {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:7px 14px 8px; font-size:.68rem; color:#777;
+  background:#fff; border-bottom:1px solid #e8e8e2;
+}
+.legend-item { display:flex; align-items:center; gap:5px; white-space:nowrap; }
+.legend-bar  { width:14px; height:6px; border-radius:3px; flex-shrink:0; }
+.legend-bar.pick  { background:#16a34a; }
+.legend-bar.label { background:#38bdf8; }
+.legend-avg-line  { width:2px; height:12px; background:rgba(0,0,0,.25); border-radius:1px; flex-shrink:0; }
+
+.fab {
+  position:fixed; bottom:18px; right:18px; z-index:100;
+  width:48px; height:48px; border-radius:50%;
+  background:#16a34a; color:#fff; border:none;
+  font-size:1.2rem; cursor:pointer;
+  box-shadow:0 3px 16px rgba(22,163,74,.35);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .15s;
+}
+.fab:active { transform:scale(.9); }
+.fab-n {
+  position:absolute; top:-3px; right:-3px;
+  background:#38bdf8; color:#fff;
+  border-radius:50%; width:16px; height:16px;
+  font-size:.55rem; font-weight:800;
+  display:none; align-items:center; justify-content:center;
+}
+.fab-n.show { display:flex; }
+
+/* ── OVERLAY ── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
+.overlay.show { display:block; }
+
+/* ── UPLOAD PANEL ── */
+.panel {
+  position:fixed; bottom:0; left:0; right:0; z-index:300;
+  background:#fff; border-radius:18px 18px 0 0;
+  padding:14px 20px 36px;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.34,1.2,.64,1);
+  max-height:80vh; overflow-y:auto;
+}
+.panel.open { transform:translateY(0); }
+.handle { width:34px; height:4px; background:#eee; border-radius:2px; margin:0 auto 14px; }
+.panel-title { font-size:.85rem; font-weight:800; color:#111; margin-bottom:4px; }
+.panel-sub   { font-size:.72rem; color:#999; margin-bottom:14px; }
+
+.drop-zone {
+  border:2px dashed #ddd; border-radius:10px;
+  padding:20px; text-align:center; cursor:pointer;
+  transition:border-color .2s; margin-bottom:10px;
+}
+.drop-zone.drag-over { border-color:#16a34a; }
+.drop-zone-text { font-size:.78rem; color:#aaa; margin-bottom:8px; }
+.pick-btn {
+  padding:7px 20px; background:#16a34a; color:#fff;
+  border-radius:8px; font-weight:700; font-size:.8rem;
+  cursor:pointer; border:none; font-family:'Sarabun',sans-serif;
+}
+
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.chip {
+  background:#f5f5f0; border:1px solid #ddd; border-radius:20px;
+  padding:3px 10px; font-size:.67rem; color:#666;
+  display:flex; align-items:center; gap:4px;
+}
+.chip-x { color:#e44; cursor:pointer; }
+.status { font-size:.72rem; margin-top:8px; color:#4caf50; min-height:18px; }
+.status.err { color:#e44; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-title">📦 ผลงานวันนี้</div>
+  <select id="date-select"></select>
+</div>
+
+<div class="total-bar">
+  <div class="total-block">
+    <div class="total-label">ทีม Pick รวม</div>
+    <div class="total-val" id="sum-pick">—</div>
+  </div>
+  <div class="total-block">
+    <div class="total-label">พนักงาน</div>
+    <div class="total-val" id="sum-people" style="text-align:center">—</div>
+  </div>
+  <div class="total-block">
+    <div class="total-label">ทีม Label รวม</div>
+    <div class="total-val" id="sum-label">—</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-bar pick"></div> PDA Picking</div>
+  <div class="legend-item"><div class="legend-bar label"></div> Print Label</div>
+  <div class="legend-item"><div class="legend-avg-line"></div> ค่าเฉลี่ยทีม</div>
+</div>
+
+<div class="list" id="list"></div>
+
+<button class="fab" id="fab-btn" title="อัปโหลด Excel">
+  📂
+  <div class="fab-n" id="fab-n">0</div>
+</button>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="panel" id="panel">
+  <div class="handle"></div>
+  <div class="panel-title">นำเข้าไฟล์ Excel</div>
+  <div class="panel-sub">Export จาก Bigseller · Task Report · รองรับหลายไฟล์พร้อมกัน</div>
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-zone-text">ลากไฟล์มาวางที่นี่</div>
+    <button class="pick-btn" onclick="document.getElementById('fi').click()">เลือกไฟล์</button>
+    <input type="file" id="fi" accept=".xlsx,.xls" multiple style="display:none">
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxjVwLftYspE6AajyR3FcTBMa-1gcXIZPLbDzl4O4qnen3tSDr-mX97Nv8mLXHDiN4U/exec';
+
+let RAW = [];
+let loadedFiles = [];
+const getName = op => op.split('@')[0].replace('st_','').charAt(0).toUpperCase() + op.split('@')[0].replace('st_','').slice(1);
+const getAllDates = () => [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
+
+function render(date) {
+  if (!date) return;
+  const day = RAW.filter(r=>r.date===date).sort((a,b)=>b.pda_pick-a.pda_pick);
+  const n = day.length||1;
+  const tPick  = day.reduce((s,r)=>s+r.pda_pick,0);
+  const tLabel = day.reduce((s,r)=>s+r.print_labels,0);
+  const aPick  = Math.round(tPick/n);
+  const aLabel = Math.round(tLabel/n);
+  const mPick  = Math.max(...day.map(r=>r.pda_pick),1);
+  const mLabel = Math.max(...day.map(r=>r.print_labels),1);
+
+  document.getElementById('sum-pick').textContent   = tPick.toLocaleString();
+  document.getElementById('sum-label').textContent  = tLabel.toLocaleString();
+  document.getElementById('sum-people').textContent = day.length;
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  if (!day.length) { list.innerHTML='<div style="padding:32px;text-align:center;color:#aaa">ไม่มีข้อมูล</div>'; return; }
+
+  day.forEach((r, i) => {
+    const rankSymbol = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    const rankClass  = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const pickW  = (r.pda_pick/mPick*100).toFixed(1);
+    const labelW = (r.print_labels/mLabel*100).toFixed(1);
+    const avgPW  = Math.min(aPick/mPick*100,100).toFixed(1);
+    const avgLW  = Math.min(aLabel/mLabel*100,100).toFixed(1);
+
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.animationDelay = `${i*0.03}s`;
+    row.innerHTML = `
+      <div class="rank ${rankClass}">${rankSymbol}</div>
+      <div class="name">${getName(r.operator)}</div>
+      <div class="bars">
+        <div class="bar-line">
+          <div class="bar-wrap">
+            <div class="bar-fill pick" style="width:${pickW}%"></div>
+            <div class="avg-tick" style="left:${avgPW}%"></div>
+          </div>
+          <div class="bar-num pick">${r.pda_pick}</div>
+        </div>
+        <div class="bar-line">
+          <div class="bar-wrap">
+            <div class="bar-fill label" style="width:${labelW}%"></div>
+            <div class="avg-tick" style="left:${avgLW}%"></div>
+          </div>
+          <div class="bar-num label">${r.print_labels}</div>
+        </div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function initDateSelect() {
+  const dates = getAllDates();
+  const sel = document.getElementById('date-select');
+  const cur = sel.value;
+  sel.innerHTML = '';
+  dates.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o);});
+  sel.value = dates.includes(cur)?cur:dates[0];
+  render(sel.value);
+}
+document.getElementById('date-select').addEventListener('change', e=>render(e.target.value));
+
+// panel
+const fab=document.getElementById('fab-btn'), panel=document.getElementById('panel'), overlay=document.getElementById('overlay');
+const open=()=>{panel.classList.add('open');overlay.classList.add('show');};
+const close=()=>{panel.classList.remove('open');overlay.classList.remove('show');};
+fab.addEventListener('click',()=>panel.classList.contains('open')?close():open());
+overlay.addEventListener('click',close);
+let ty=0;
+panel.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+panel.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-ty>60)close();},{passive:true});
+
+// excel
+function parseExcel(file){
+  return new Promise((res,rej)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:0});
+        let hi=-1;
+        for(let i=0;i<Math.min(rows.length,5);i++){
+          const r=rows[i].map(c=>String(c).toLowerCase());
+          if(r.includes('date')&&r.includes('operator')){hi=i;break;}
+        }
+        if(hi<0){rej('ไม่พบ header');return;}
+        const h=rows[hi].map(c=>String(c).trim());
+        const col=(...kws)=>{for(const k of kws){const i=h.findIndex(x=>x.toLowerCase().includes(k.toLowerCase()));if(i>=0)return i;}return -1;};
+        const iD=col('Date'),iO=col('Operator'),iP=col('PDA Picking'),iL=col('Print Shipping Label');
+        if(iD<0||iO<0){rej('ไม่พบ Date/Operator');return;}
+        const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const parsed=[];
+        for(let i=hi+1;i<rows.length;i++){
+          const r=rows[i];const dv=r[iD],ov=r[iO];
+          if(!dv||!ov||String(ov).trim()==='-')continue;
+          let ds=typeof dv==='number'?(()=>{const p=XLSX.SSF.parse_date_code(dv);return`${String(p.d).padStart(2,'0')} ${M[p.m-1]} ${p.y}`;})():String(dv).trim();
+          parsed.push({date:ds,operator:String(ov).trim(),
+            pda_pick:Number(iP>=0?r[iP]||0:0),
+            print_labels:Number(iL>=0?r[iL]||0:0)});
+        }
+        res(parsed);
+      }catch(err){rej('อ่านไม่สำเร็จ:'+err.message);}
+    };
+    reader.onerror=()=>rej('อ่านไม่ได้');
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function mergeData(rows){
+  RAW=[...RAW.filter(r=>!rows.some(n=>n.date===r.date&&n.operator===r.operator)),...rows];
+}
+
+function renderChips(){
+  document.getElementById('chips').innerHTML=loadedFiles.map((n,i)=>
+    `<div class="chip">📄 ${n} <span class="chip-x" onclick="rmFile(${i})">✕</span></div>`).join('');
+  const nb=document.getElementById('fab-n');
+  nb.textContent=loadedFiles.length; nb.className='fab-n'+(loadedFiles.length?' show':'');
+}
+
+function rmFile(i){loadedFiles.splice(i,1);renderChips();}
+
+function setStatus(m,err=false){const el=document.getElementById('status');el.textContent=m;el.className='status'+(err?' err':'');}
+
+async function handleFiles(files){
+  let added=0,errs=[];
+  for(const f of files){
+    if(loadedFiles.includes(f.name)){errs.push(f.name+' (โหลดแล้ว)');continue;}
+    try{const rows=await parseExcel(f);mergeData(rows);loadedFiles.push(f.name);added+=rows.length;}
+    catch(e){errs.push(f.name+': '+e);}
+  }
+  renderChips();initDateSelect();
+  setStatus(added>0?`✅ โหลด ${added.toLocaleString()} แถว`+(errs.length?' · ⚠️'+errs.join(','):''):(errs.length?'⚠️'+errs.join(','):'ไม่มีข้อมูลใหม่'),errs.length>0&&added===0);
+}
+
+document.getElementById('fi').addEventListener('change',e=>{handleFiles([...e.target.files]);e.target.value='';});
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleFiles([...e.dataTransfer.files].filter(f=>f.name.match(/\.xlsx?$/i)));});
+
+// ─── LOAD FROM GOOGLE SHEETS ───
+async function loadFromSheets() {
+  const list = document.getElementById('list');
+  list.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa">⏳ กำลังโหลดข้อมูล...</div>';
+  try {
+    const res  = await fetch(SHEET_URL);
+    const data = await res.json();
+    RAW = data;
+    initDateSelect();
+  } catch(e) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:#e44">❌ โหลดข้อมูลไม่สำเร็จ<br><small>ตรวจสอบการตั้งค่า Google Sheets</small></div>';
+  }
+}
+
+loadFromSheets();
+</script>
+</body>
+</html>
