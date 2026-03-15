@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ผลงานวันนี้</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
@@ -110,66 +109,6 @@ select {
 .legend-bar.pick  { background:#16a34a; }
 .legend-bar.label { background:#38bdf8; }
 .legend-avg-line  { width:2px; height:12px; background:rgba(0,0,0,.25); border-radius:1px; flex-shrink:0; }
-
-.fab {
-  position:fixed; bottom:18px; right:18px; z-index:100;
-  width:48px; height:48px; border-radius:50%;
-  background:#16a34a; color:#fff; border:none;
-  font-size:1.2rem; cursor:pointer;
-  box-shadow:0 3px 16px rgba(22,163,74,.35);
-  display:flex; align-items:center; justify-content:center;
-  transition:transform .15s;
-}
-.fab:active { transform:scale(.9); }
-.fab-n {
-  position:absolute; top:-3px; right:-3px;
-  background:#38bdf8; color:#fff;
-  border-radius:50%; width:16px; height:16px;
-  font-size:.55rem; font-weight:800;
-  display:none; align-items:center; justify-content:center;
-}
-.fab-n.show { display:flex; }
-
-/* ── OVERLAY ── */
-.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; }
-.overlay.show { display:block; }
-
-/* ── UPLOAD PANEL ── */
-.panel {
-  position:fixed; bottom:0; left:0; right:0; z-index:300;
-  background:#fff; border-radius:18px 18px 0 0;
-  padding:14px 20px 36px;
-  transform:translateY(100%);
-  transition:transform .3s cubic-bezier(.34,1.2,.64,1);
-  max-height:80vh; overflow-y:auto;
-}
-.panel.open { transform:translateY(0); }
-.handle { width:34px; height:4px; background:#eee; border-radius:2px; margin:0 auto 14px; }
-.panel-title { font-size:.85rem; font-weight:800; color:#111; margin-bottom:4px; }
-.panel-sub   { font-size:.72rem; color:#999; margin-bottom:14px; }
-
-.drop-zone {
-  border:2px dashed #ddd; border-radius:10px;
-  padding:20px; text-align:center; cursor:pointer;
-  transition:border-color .2s; margin-bottom:10px;
-}
-.drop-zone.drag-over { border-color:#16a34a; }
-.drop-zone-text { font-size:.78rem; color:#aaa; margin-bottom:8px; }
-.pick-btn {
-  padding:7px 20px; background:#16a34a; color:#fff;
-  border-radius:8px; font-weight:700; font-size:.8rem;
-  cursor:pointer; border:none; font-family:'Sarabun',sans-serif;
-}
-
-.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-.chip {
-  background:#f5f5f0; border:1px solid #ddd; border-radius:20px;
-  padding:3px 10px; font-size:.67rem; color:#666;
-  display:flex; align-items:center; gap:4px;
-}
-.chip-x { color:#e44; cursor:pointer; }
-.status { font-size:.72rem; margin-top:8px; color:#4caf50; min-height:18px; }
-.status.err { color:#e44; }
 </style>
 </head>
 <body>
@@ -202,31 +141,10 @@ select {
 
 <div class="list" id="list"></div>
 
-<button class="fab" id="fab-btn" title="อัปโหลด Excel">
-  📂
-  <div class="fab-n" id="fab-n">0</div>
-</button>
-
-<div class="overlay" id="overlay"></div>
-
-<div class="panel" id="panel">
-  <div class="handle"></div>
-  <div class="panel-title">นำเข้าไฟล์ Excel</div>
-  <div class="panel-sub">Export จาก Bigseller · Task Report · รองรับหลายไฟล์พร้อมกัน</div>
-  <div class="drop-zone" id="drop-zone">
-    <div class="drop-zone-text">ลากไฟล์มาวางที่นี่</div>
-    <button class="pick-btn" onclick="document.getElementById('fi').click()">เลือกไฟล์</button>
-    <input type="file" id="fi" accept=".xlsx,.xls" multiple style="display:none">
-  </div>
-  <div class="chips" id="chips"></div>
-  <div class="status" id="status"></div>
-</div>
-
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxjVwLftYspE6AajyR3FcTBMa-1gcXIZPLbDzl4O4qnen3tSDr-mX97Nv8mLXHDiN4U/exec';
 
 let RAW = [];
-let loadedFiles = [];
 const getName = op => op.split('@')[0].replace('st_','').charAt(0).toUpperCase() + op.split('@')[0].replace('st_','').slice(1);
 const getAllDates = () => [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
 
@@ -294,85 +212,6 @@ function initDateSelect() {
   render(sel.value);
 }
 document.getElementById('date-select').addEventListener('change', e=>render(e.target.value));
-
-// panel
-const fab=document.getElementById('fab-btn'), panel=document.getElementById('panel'), overlay=document.getElementById('overlay');
-const open=()=>{panel.classList.add('open');overlay.classList.add('show');};
-const close=()=>{panel.classList.remove('open');overlay.classList.remove('show');};
-fab.addEventListener('click',()=>panel.classList.contains('open')?close():open());
-overlay.addEventListener('click',close);
-let ty=0;
-panel.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
-panel.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-ty>60)close();},{passive:true});
-
-// excel
-function parseExcel(file){
-  return new Promise((res,rej)=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      try{
-        const wb=XLSX.read(e.target.result,{type:'array'});
-        const ws=wb.Sheets[wb.SheetNames[0]];
-        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:0});
-        let hi=-1;
-        for(let i=0;i<Math.min(rows.length,5);i++){
-          const r=rows[i].map(c=>String(c).toLowerCase());
-          if(r.includes('date')&&r.includes('operator')){hi=i;break;}
-        }
-        if(hi<0){rej('ไม่พบ header');return;}
-        const h=rows[hi].map(c=>String(c).trim());
-        const col=(...kws)=>{for(const k of kws){const i=h.findIndex(x=>x.toLowerCase().includes(k.toLowerCase()));if(i>=0)return i;}return -1;};
-        const iD=col('Date'),iO=col('Operator'),iP=col('PDA Picking'),iL=col('Print Shipping Label');
-        if(iD<0||iO<0){rej('ไม่พบ Date/Operator');return;}
-        const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const parsed=[];
-        for(let i=hi+1;i<rows.length;i++){
-          const r=rows[i];const dv=r[iD],ov=r[iO];
-          if(!dv||!ov||String(ov).trim()==='-')continue;
-          let ds=typeof dv==='number'?(()=>{const p=XLSX.SSF.parse_date_code(dv);return`${String(p.d).padStart(2,'0')} ${M[p.m-1]} ${p.y}`;})():String(dv).trim();
-          parsed.push({date:ds,operator:String(ov).trim(),
-            pda_pick:Number(iP>=0?r[iP]||0:0),
-            print_labels:Number(iL>=0?r[iL]||0:0)});
-        }
-        res(parsed);
-      }catch(err){rej('อ่านไม่สำเร็จ:'+err.message);}
-    };
-    reader.onerror=()=>rej('อ่านไม่ได้');
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-function mergeData(rows){
-  RAW=[...RAW.filter(r=>!rows.some(n=>n.date===r.date&&n.operator===r.operator)),...rows];
-}
-
-function renderChips(){
-  document.getElementById('chips').innerHTML=loadedFiles.map((n,i)=>
-    `<div class="chip">📄 ${n} <span class="chip-x" onclick="rmFile(${i})">✕</span></div>`).join('');
-  const nb=document.getElementById('fab-n');
-  nb.textContent=loadedFiles.length; nb.className='fab-n'+(loadedFiles.length?' show':'');
-}
-
-function rmFile(i){loadedFiles.splice(i,1);renderChips();}
-
-function setStatus(m,err=false){const el=document.getElementById('status');el.textContent=m;el.className='status'+(err?' err':'');}
-
-async function handleFiles(files){
-  let added=0,errs=[];
-  for(const f of files){
-    if(loadedFiles.includes(f.name)){errs.push(f.name+' (โหลดแล้ว)');continue;}
-    try{const rows=await parseExcel(f);mergeData(rows);loadedFiles.push(f.name);added+=rows.length;}
-    catch(e){errs.push(f.name+': '+e);}
-  }
-  renderChips();initDateSelect();
-  setStatus(added>0?`✅ โหลด ${added.toLocaleString()} แถว`+(errs.length?' · ⚠️'+errs.join(','):''):(errs.length?'⚠️'+errs.join(','):'ไม่มีข้อมูลใหม่'),errs.length>0&&added===0);
-}
-
-document.getElementById('fi').addEventListener('change',e=>{handleFiles([...e.target.files]);e.target.value='';});
-const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleFiles([...e.dataTransfer.files].filter(f=>f.name.match(/\.xlsx?$/i)));});
 
 // ─── LOAD FROM GOOGLE SHEETS ───
 async function loadFromSheets() {
