@@ -15,90 +15,45 @@ body {
   display:flex; flex-direction:column;
 }
 
-/* ── HEADER ── */
+/* ── SINGLE-ROW HEADER BAR ── */
 .top-bar {
-  background:#fff;
-  border-bottom:1px solid #e8e8e2;
-  padding:14px 20px 12px;
-  display:flex; justify-content:space-between; align-items:flex-end;
-}
-.top-title { font-size:1.05rem; font-weight:800; color:#111; }
-.top-date  { font-size:.75rem; color:#999; }
-
-/* ── DATE PICKER (in header) ── */
-select {
-  border:1px solid #e0e0e0; background:#f9f9f7;
-  color:#333; padding:4px 10px; border-radius:6px;
-  font-family:'Sarabun',sans-serif; font-size:.8rem;
-  outline:none; cursor:pointer;
-}
-
-/* ── TEAM TOTAL BAR ── */
-.total-bar {
   background:#111; color:#fff;
-  padding:10px 20px;
-  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 16px;
+  display:flex; align-items:center; gap:10px;
 }
-.total-label { font-size:.72rem; color:#aaa; }
-.total-val   { font-size:1.3rem; font-weight:800; }
+
+.top-title { font-size:.9rem; font-weight:800; color:#fff; white-space:nowrap; flex-shrink:0; }
+
+/* Date select styled for dark bg */
+select {
+  border:1px solid #444; background:#2a2a2a;
+  color:#fff; padding:3px 8px; border-radius:6px;
+  font-family:'Sarabun',sans-serif; font-size:.75rem;
+  outline:none; cursor:pointer; flex-shrink:0;
+}
+select option { background:#222; color:#fff; }
+
+/* Totals — fill remaining space */
+.totals-row {
+  display:flex; justify-content:flex-end; align-items:center;
+  gap:16px; flex:1;
+}
 .total-block { text-align:center; }
-.total-block:first-child { text-align:left; }
-.total-block:last-child  { text-align:right; }
+.total-label { font-size:.62rem; color:#aaa; line-height:1.2; }
+.total-val   { font-size:1rem; font-weight:800; line-height:1.2; }
 
-/* ── LIST ── */
-.list { flex:1; overflow-y:auto; padding:10px 14px 80px; }
-
-.row {
-  background:#fff; border-radius:10px;
-  padding:10px 14px; margin-bottom:8px;
-  display:flex; align-items:center; gap:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,.06);
-  animation:up .25s ease both;
-}
-@keyframes up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-.row.me {
-  border:2px solid #111;
-  background:#fffef5;
+/* ── LIST ──
+   top-bar ≈ 42px  (8px pad×2 + ~26px content)
+   legend  ≈ 30px  (7+8px pad + ~15px text)
+   total fixed chrome = 72px
+   list fills: 100vh - 72px, scrolls if content overflows
+*/
+.list {
+  flex:1; overflow-y:auto; padding:8px 14px 20px;
+  height: calc(100vh - 72px);
 }
 
-/* rank */
-.rank {
-  font-size:.75rem; font-weight:800; color:#ccc;
-  min-width:22px; text-align:center; flex-shrink:0;
-}
-.rank.r1 { color:#f5a800; font-size:1rem; }
-.rank.r2 { color:#9e9e9e; font-size:.9rem; }
-.rank.r3 { color:#a0673a; font-size:.85rem; }
-
-/* name */
-.name { font-size:1rem; font-weight:700; color:#111; flex:1; min-width:0; }
-
-/* bar area */
-.bars { flex:2; min-width:0; }
-
-.bar-line { margin-bottom:3px; display:flex; align-items:center; gap:6px; }
-.bar-line:last-child { margin-bottom:0; }
-
-.bar-icon { font-size:.65rem; color:#999; width:10px; flex-shrink:0; }
-
-.bar-wrap {
-  flex:1; height:6px; background:#eee; border-radius:3px; overflow:hidden; position:relative;
-}
-.bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
-.bar-fill.pick  { background:#16a34a; }
-.bar-fill.label { background:#38bdf8; }
-
-.avg-tick {
-  position:absolute; top:-1px; width:2px; height:8px;
-  background:rgba(0,0,0,.2); border-radius:1px;
-}
-
-.bar-num { font-size:.9rem; font-weight:700; color:#555; min-width:26px; text-align:right; flex-shrink:0; }
-.bar-num.pick  { color:#16a34a; }
-.bar-num.label { color:#0284c7; }
-
-/* avg line legend */
+/* ── LEGEND ── */
 .legend {
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   padding:7px 14px 8px; font-size:.68rem; color:#777;
@@ -109,27 +64,72 @@ select {
 .legend-bar.pick  { background:#16a34a; }
 .legend-bar.label { background:#38bdf8; }
 .legend-avg-line  { width:2px; height:12px; background:rgba(0,0,0,.25); border-radius:1px; flex-shrink:0; }
+
+.row {
+  background:#fff; border-radius:10px;
+  padding:5px 14px; margin-bottom:4px;
+  display:flex; align-items:center; gap:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  animation:up .25s ease both;
+}
+@keyframes up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.row.me {
+  border:2px solid #111;
+  background:#fffef5;
+}
+
+.rank {
+  font-size:.75rem; font-weight:800; color:#ccc;
+  min-width:22px; text-align:center; flex-shrink:0;
+}
+.rank.r1 { color:#f5a800; font-size:1rem; }
+.rank.r2 { color:#9e9e9e; font-size:.9rem; }
+.rank.r3 { color:#a0673a; font-size:.85rem; }
+
+.name { font-size:.88rem; font-weight:700; color:#111; flex:1; min-width:0; }
+
+.bars { flex:2; min-width:0; }
+
+.bar-line { margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+.bar-line:last-child { margin-bottom:0; }
+
+.bar-wrap {
+  flex:1; height:5px; background:#eee; border-radius:3px; overflow:hidden; position:relative;
+}
+.bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
+.bar-fill.pick  { background:#16a34a; }
+.bar-fill.label { background:#38bdf8; }
+
+.avg-tick {
+  position:absolute; top:-1px; width:2px; height:7px;
+  background:rgba(0,0,0,.2); border-radius:1px;
+}
+
+.bar-num { font-size:.9rem; font-weight:700; color:#555; min-width:26px; text-align:right; flex-shrink:0; }
+.bar-num.pick  { color:#16a34a; }
+.bar-num.label { color:#0284c7; }
 </style>
 </head>
 <body>
 
+<!-- Single-row header bar -->
 <div class="top-bar">
   <div class="top-title">📦 ผลงานวันนี้</div>
   <select id="date-select"></select>
-</div>
-
-<div class="total-bar">
-  <div class="total-block">
-    <div class="total-label">ทีม Pick รวม</div>
-    <div class="total-val" id="sum-pick">—</div>
-  </div>
-  <div class="total-block">
-    <div class="total-label">พนักงาน</div>
-    <div class="total-val" id="sum-people" style="text-align:center">—</div>
-  </div>
-  <div class="total-block">
-    <div class="total-label">ทีม Label รวม</div>
-    <div class="total-val" id="sum-label">—</div>
+  <div class="totals-row">
+    <div class="total-block">
+      <div class="total-label">Pick รวม</div>
+      <div class="total-val" id="sum-pick">—</div>
+    </div>
+    <div class="total-block">
+      <div class="total-label">พนักงาน</div>
+      <div class="total-val" id="sum-people">—</div>
+    </div>
+    <div class="total-block">
+      <div class="total-label">Label รวม</div>
+      <div class="total-val" id="sum-label">—</div>
+    </div>
   </div>
 </div>
 
@@ -213,7 +213,6 @@ function initDateSelect() {
 }
 document.getElementById('date-select').addEventListener('change', e=>render(e.target.value));
 
-// ─── LOAD FROM GOOGLE SHEETS ───
 async function loadFromSheets() {
   const list = document.getElementById('list');
   list.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa">⏳ กำลังโหลดข้อมูล...</div>';
