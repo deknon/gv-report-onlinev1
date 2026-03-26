@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ผลงานวันนี้</title>
+<title>ผลงานวันนี้ v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -15,16 +15,14 @@ body {
   display:flex; flex-direction:column;
 }
 
-/* ── SINGLE-ROW HEADER BAR ── */
 .top-bar {
   background:#111; color:#fff;
   padding:8px 16px;
   display:flex; align-items:center; gap:10px;
+  flex-shrink:0;
 }
-
 .top-title { font-size:.9rem; font-weight:800; color:#fff; white-space:nowrap; flex-shrink:0; }
 
-/* Date select styled for dark bg */
 select {
   border:1px solid #444; background:#2a2a2a;
   color:#fff; padding:3px 8px; border-radius:6px;
@@ -33,7 +31,6 @@ select {
 }
 select option { background:#222; color:#fff; }
 
-/* Totals — fill remaining space */
 .totals-row {
   display:flex; justify-content:flex-end; align-items:center;
   gap:16px; flex:1;
@@ -42,83 +39,149 @@ select option { background:#222; color:#fff; }
 .total-label { font-size:.62rem; color:#aaa; line-height:1.2; }
 .total-val   { font-size:1rem; font-weight:800; line-height:1.2; }
 
-/* ── LIST ──
-   top-bar ≈ 42px  (8px pad×2 + ~26px content)
-   legend  ≈ 30px  (7+8px pad + ~15px text)
-   total fixed chrome = 72px
-   list fills: 100vh - 72px, scrolls if content overflows
-*/
-.list {
-  flex:1; overflow-y:auto; padding:8px 14px 20px;
-  height: calc(100vh - 72px);
-}
-
 /* ── LEGEND ── */
 .legend {
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-  padding:7px 14px 8px; font-size:.68rem; color:#777;
+  padding:6px 14px; font-size:.68rem; color:#777;
   background:#fff; border-bottom:1px solid #e8e8e2;
+  flex-shrink:0;
 }
 .legend-item { display:flex; align-items:center; gap:5px; white-space:nowrap; }
-.legend-bar  { width:14px; height:6px; border-radius:3px; flex-shrink:0; }
-.legend-bar.pick  { background:#16a34a; }
-.legend-bar.label { background:#38bdf8; }
+.legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-dot.pick  { background:#16a34a; }
+.legend-dot.label { background:#38bdf8; }
+.legend-dot.pick-low { background:#16a34a; opacity:.3; }
 .legend-avg-line  { width:2px; height:12px; background:rgba(0,0,0,.25); border-radius:1px; flex-shrink:0; }
 
+/* ── OUTLIER STRIP ── */
+.outlier-strip {
+  display:none; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:4px 14px; font-size:.65rem; color:#999;
+  background:#faf9f6; border-bottom:1px solid #ece8e0;
+  flex-shrink:0;
+}
+.outlier-badge {
+  background:#e5e5e0; color:#999; border-radius:20px;
+  padding:2px 8px; font-size:.62rem; font-weight:600;
+}
+
+/* avg note */
+.avg-note {
+  font-size:.65rem; color:#aaa; text-align:right;
+  padding:3px 4px 5px; flex-shrink:0;
+}
+
+.list {
+  flex:1; overflow-y:auto; padding:6px 12px 20px;
+}
+
+/* ── ROW ── */
 .row {
   background:#fff; border-radius:10px;
-  padding:5px 14px; margin-bottom:4px;
-  display:flex; align-items:center; gap:8px;
+  padding:6px 12px; margin-bottom:4px;
+  display:flex; align-items:center; gap:6px;
   box-shadow:0 1px 3px rgba(0,0,0,.06);
-  animation:up .25s ease both;
+  animation:up .22s ease both;
+  cursor:pointer; position:relative;
+  transition: box-shadow .15s;
 }
-@keyframes up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.row:active { box-shadow:0 2px 8px rgba(0,0,0,.1); }
+@keyframes up { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
 
-.row.me {
-  border:2px solid #111;
-  background:#fffef5;
+/* ── CAT POPUP ── */
+.cat-popup {
+  display:none; position:absolute;
+  top:-42px; left:50%; transform:translateX(-50%);
+  background:#111; color:#fff; border-radius:12px;
+  padding:6px 12px; font-size:.73rem; font-weight:600;
+  white-space:nowrap; z-index:10; pointer-events:none;
+  animation:pop .18s cubic-bezier(.34,1.56,.64,1);
 }
+.cat-popup::after {
+  content:''; position:absolute; top:100%; left:50%;
+  transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:#111;
+}
+@keyframes pop { from{opacity:0;transform:translateX(-50%) scale(.8)} to{opacity:1;transform:translateX(-50%) scale(1)} }
+.row.show-cat .cat-popup { display:block; }
 
+/* ── RANK ── */
 .rank {
   font-size:.75rem; font-weight:800; color:#ccc;
-  min-width:22px; text-align:center; flex-shrink:0;
+  width:22px; text-align:center; flex-shrink:0;
 }
 .rank.r1 { color:#f5a800; font-size:1rem; }
 .rank.r2 { color:#9e9e9e; font-size:.9rem; }
 .rank.r3 { color:#a0673a; font-size:.85rem; }
 
-.name { font-size:.88rem; font-weight:700; color:#111; flex:1; min-width:0; }
+/* ── NAME — fixed width, no flex:1 ── */
+.name {
+  font-size:.85rem; font-weight:700; color:#111;
+  width:68px; min-width:68px; flex-shrink:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 
-.bars { flex:2; min-width:0; }
+/* ── BARS section ── */
+.bars { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
 
-.bar-line { margin-bottom:2px; display:flex; align-items:center; gap:6px; }
-.bar-line:last-child { margin-bottom:0; }
+.bar-line { display:flex; align-items:center; gap:5px; }
 
 .bar-wrap {
-  flex:1; height:5px; background:#eee; border-radius:3px; overflow:hidden; position:relative;
+  flex:1; height:6px; background:#eee; border-radius:3px;
+  overflow:visible; position:relative;
 }
-.bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
-.bar-fill.pick  { background:#16a34a; }
-.bar-fill.label { background:#38bdf8; }
+.bar-fill {
+  height:100%; border-radius:3px;
+  transition:width .55s cubic-bezier(.34,1.56,.64,1), opacity .4s;
+}
+
+/* PICK bar — color stays green; opacity signals above/below avg */
+.bar-fill.pick {
+  background:#16a34a;
+}
+.bar-fill.pick.below-avg {
+  opacity:.28;
+}
+
+/* LABEL bar — always steady cyan */
+.bar-fill.label {
+  background:#38bdf8;
+  opacity:.75;
+}
 
 .avg-tick {
-  position:absolute; top:-1px; width:2px; height:7px;
-  background:rgba(0,0,0,.2); border-radius:1px;
+  position:absolute; top:-2px; width:2px; height:10px;
+  background:rgba(0,0,0,.28); border-radius:1px; z-index:2;
 }
 
-.bar-num { font-size:.9rem; font-weight:700; color:#555; min-width:26px; text-align:right; flex-shrink:0; }
-.bar-num.pick  { color:#16a34a; }
-.bar-num.label { color:#0284c7; }
+/* ── RIGHT SIDE: gap + number ── */
+.right {
+  display:flex; flex-direction:column; align-items:flex-end;
+  gap:1px; flex-shrink:0; min-width:52px;
+}
+.num-row { display:flex; align-items:center; gap:4px; }
+.gap-lbl {
+  font-size:.6rem; font-weight:700; line-height:1;
+  min-width:28px; text-align:right;
+}
+.gap-lbl.pos { color:#16a34a; }
+.gap-lbl.neg { color:#f97316; }
+.gap-lbl.zero { color:#ccc; }
+
+/* All numbers same color — neutral #555 */
+.bar-num {
+  font-size:.88rem; font-weight:700; color:#555;
+  min-width:26px; text-align:right; line-height:1;
+}
 </style>
 </head>
 <body>
 
-<!-- Single-row header bar -->
 <div class="top-bar">
   <div class="top-title">📦 ผลงานวันนี้</div>
   <select id="date-select"></select>
   <div class="totals-row">
-      <div class="total-block">
+    <div class="total-block">
       <div class="total-label">พนักงาน</div>
       <div class="total-val" id="sum-people">—</div>
     </div>
@@ -134,10 +197,18 @@ select option { background:#222; color:#fff; }
 </div>
 
 <div class="legend">
-  <div class="legend-item"><div class="legend-bar pick"></div> PDA Picking</div>
-  <div class="legend-item"><div class="legend-bar label"></div> Print Label</div>
+  <div class="legend-item"><div class="legend-dot pick"></div> PDA ≥ เฉลี่ย</div>
+  <div class="legend-item"><div class="legend-dot pick-low"></div> PDA &lt; เฉลี่ย</div>
+  <div class="legend-item"><div class="legend-dot label"></div> Print Label</div>
   <div class="legend-item"><div class="legend-avg-line"></div> ค่าเฉลี่ยทีม</div>
 </div>
+
+<div id="outlier-strip" class="outlier-strip">
+  <span>ตัดออก:</span>
+  <span id="outlier-names"></span>
+</div>
+
+<div id="avg-note" class="avg-note" style="padding-left:12px;padding-right:12px;"></div>
 
 <div class="list" id="list"></div>
 
@@ -145,59 +216,130 @@ select option { background:#222; color:#fff; }
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxjVwLftYspE6AajyR3FcTBMa-1gcXIZPLbDzl4O4qnen3tSDr-mX97Nv8mLXHDiN4U/exec';
 
 let RAW = [];
-const getName = op => op.split('@')[0].replace('st_','').charAt(0).toUpperCase() + op.split('@')[0].replace('st_','').slice(1);
-const getAllDates = () => [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
+
+const getName = op => {
+  const base = op.split('@')[0].replace(/st_/i,'');
+  return base.charAt(0).toUpperCase() + base.slice(1);
+};
+
+const getAllDates = () =>
+  [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
+
+/* ── OUTLIER: pick < 20% of day median ── */
+function detectOutliers(day) {
+  if (day.length < 5) return { core: day, outliers: [] };
+  const picks = [...day.map(r=>r.pda_pick)].sort((a,b)=>a-b);
+  const med = picks[Math.floor(picks.length/2)];
+  const threshold = med * 0.20;
+  const outliers = day.filter(r => r.pda_pick < threshold);
+  const core     = day.filter(r => r.pda_pick >= threshold);
+  return { core, outliers, threshold: Math.round(threshold), median: Math.round(med) };
+}
+
+/* ── CAT MESSAGES ── */
+function catMsg(rank, total, gapPick) {
+  if (rank === 0) return '🐱 ขนนุ่มบอก: วันนี้เทพมากเลยยย~';
+  if (rank === 1) return '🐱 เกือบถึงยอดแล้ว! พรุ่งนี้ขึ้นแน่!';
+  if (rank === 2) return '🐱 Top 3 เลยนะ เก่งมากๆ';
+  if (gapPick >= 50) return `🐱 สูงกว่าค่าเฉลี่ย +${gapPick} เก่งมากก`;
+  if (gapPick >= 0)  return `🐱 อยู่เหนือค่าเฉลี่ยแล้ว ดีมากเลย!`;
+  if (gapPick >= -40) return `🐱 อีกนิดเดียวก็ถึงค่าเฉลี่ยแล้วนะ!`;
+  return '🐱 ไม่เป็นไร พรุ่งนี้ลองใหม่นะ 🌟';
+}
+
+let activeRow = null;
 
 function render(date) {
   if (!date) return;
-  const day = RAW.filter(r=>r.date===date).sort((a,b)=>b.pda_pick-a.pda_pick);
-  const n = day.length||1;
-  const tPick  = day.reduce((s,r)=>s+r.pda_pick,0);
-  const tLabel = day.reduce((s,r)=>s+r.print_labels,0);
-  const aPick  = Math.round(tPick/n);
-  const aLabel = Math.round(tLabel/n);
+  const allDay = RAW.filter(r=>r.date===date).sort((a,b)=>b.pda_pick-a.pda_pick);
+  const { core, outliers, threshold, median } = detectOutliers(allDay);
+
+  /* outlier strip */
+  const strip = document.getElementById('outlier-strip');
+  if (outliers.length) {
+    strip.style.display = 'flex';
+    document.getElementById('outlier-names').innerHTML =
+      outliers.map(r=>`<span class="outlier-badge">${getName(r.operator)} (${r.pda_pick})</span>`).join('');
+  } else {
+    strip.style.display = 'none';
+  }
+
+  const day = core.sort((a,b)=>b.pda_pick-a.pda_pick);
+  const n = day.length || 1;
+  const tPick  = allDay.reduce((s,r)=>s+r.pda_pick,0);
+  const tLabel = allDay.reduce((s,r)=>s+r.print_labels,0);
+  const aPick  = Math.round(day.reduce((s,r)=>s+r.pda_pick,0)/n);
+  const aLabel = Math.round(day.reduce((s,r)=>s+r.print_labels,0)/n);
   const mPick  = Math.max(...day.map(r=>r.pda_pick),1);
   const mLabel = Math.max(...day.map(r=>r.print_labels),1);
 
-  document.getElementById('sum-pick').textContent   = tPick.toLocaleString();
-  document.getElementById('sum-label').textContent  = tLabel.toLocaleString();
-  document.getElementById('sum-people').textContent = day.length;
+  document.getElementById('sum-pick').textContent  = tPick.toLocaleString();
+  document.getElementById('sum-label').textContent = tLabel.toLocaleString();
+  document.getElementById('sum-people').textContent = allDay.length;
+
+  document.getElementById('avg-note').textContent =
+    `ค่าเฉลี่ยทีม (หลังตัด outlier < ${threshold} picks): Pick ${aPick} | Label ${aLabel}`;
 
   const list = document.getElementById('list');
   list.innerHTML = '';
-
-  if (!day.length) { list.innerHTML='<div style="padding:32px;text-align:center;color:#aaa">ไม่มีข้อมูล</div>'; return; }
+  if (!day.length) {
+    list.innerHTML='<div style="padding:32px;text-align:center;color:#aaa">ไม่มีข้อมูล</div>';
+    return;
+  }
 
   day.forEach((r, i) => {
-    const rankSymbol = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
-    const rankClass  = i===0?'r1':i===1?'r2':i===2?'r3':'';
-    const pickW  = (r.pda_pick/mPick*100).toFixed(1);
-    const labelW = (r.print_labels/mLabel*100).toFixed(1);
-    const avgPW  = Math.min(aPick/mPick*100,100).toFixed(1);
-    const avgLW  = Math.min(aLabel/mLabel*100,100).toFixed(1);
+    const rankSym  = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    const rankCls  = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const pickW    = (r.pda_pick/mPick*100).toFixed(1);
+    const labelW   = (r.print_labels/mLabel*100).toFixed(1);
+    const avgPW    = Math.min(aPick/mPick*100,100).toFixed(1);
+    const avgLW    = Math.min(aLabel/mLabel*100,100).toFixed(1);
+    const gapPick  = r.pda_pick - aPick;
+    const gapLabel = r.print_labels - aLabel;
+    const aboveAvg = gapPick >= 0;
+    const gapCls   = gapPick > 0 ? 'pos' : gapPick < 0 ? 'neg' : 'zero';
+    const gapSign  = gapPick >= 0 ? '+' : '';
+    const pickBelowCls = aboveAvg ? '' : 'below-avg';
+    const cat = catMsg(i, day.length, gapPick);
 
     const row = document.createElement('div');
     row.className = 'row';
     row.style.animationDelay = `${i*0.03}s`;
     row.innerHTML = `
-      <div class="rank ${rankClass}">${rankSymbol}</div>
+      <div class="cat-popup">${cat}</div>
+      <div class="rank ${rankCls}">${rankSym}</div>
       <div class="name">${getName(r.operator)}</div>
       <div class="bars">
         <div class="bar-line">
           <div class="bar-wrap">
-            <div class="bar-fill pick" style="width:${pickW}%"></div>
+            <div class="bar-fill pick ${pickBelowCls}" style="width:${pickW}%"></div>
             <div class="avg-tick" style="left:${avgPW}%"></div>
           </div>
-          <div class="bar-num pick">${r.pda_pick}</div>
         </div>
         <div class="bar-line">
           <div class="bar-wrap">
             <div class="bar-fill label" style="width:${labelW}%"></div>
             <div class="avg-tick" style="left:${avgLW}%"></div>
           </div>
-          <div class="bar-num label">${r.print_labels}</div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="num-row">
+          <span class="gap-lbl ${gapCls}">${gapSign}${gapPick}</span>
+          <span class="bar-num">${r.pda_pick}</span>
+        </div>
+        <div class="num-row">
+          <span class="gap-lbl"></span>
+          <span class="bar-num" style="color:#aaa;font-size:.78rem;">${r.print_labels}</span>
         </div>
       </div>`;
+
+    row.addEventListener('click', () => {
+      if (activeRow && activeRow !== row) activeRow.classList.remove('show-cat');
+      row.classList.toggle('show-cat');
+      activeRow = row.classList.contains('show-cat') ? row : null;
+    });
+
     list.appendChild(row);
   });
 }
@@ -208,10 +350,18 @@ function initDateSelect() {
   const cur = sel.value;
   sel.innerHTML = '';
   dates.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o);});
-  sel.value = dates.includes(cur)?cur:dates[0];
+  sel.value = dates.includes(cur) ? cur : dates[0];
   render(sel.value);
 }
+
 document.getElementById('date-select').addEventListener('change', e=>render(e.target.value));
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.row') && activeRow) {
+    activeRow.classList.remove('show-cat');
+    activeRow = null;
+  }
+});
 
 async function loadFromSheets() {
   const list = document.getElementById('list');
