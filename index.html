@@ -236,19 +236,33 @@ const getName = op => {
 const getAllDates = () =>
   [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
 
-/* ── OUTLIER: 2-pass logic ──
-   Pass 1: core = pick >= 20% median AND label > 0
-   Pass 2: re-add label=0 workers whose pick >= pass-1 avg
+/* ── OUTLIER: permanent staff always included ──
+   PERMANENT: never excluded regardless of pick/label
+   Pass 1: core = permanent + flex (pick >= 20% median AND label > 0)
+   Pass 2: re-add flex label=0 whose pick >= pass-1 avg
 ──────────────────────────────────────── */
+const PERMANENT = new Set(['u','oei','pu','va','toon','phat','nuch','candy','whan','atom']);
+const getKey = op => op.split('@')[0].replace(/st_/i,'').toLowerCase();
+
 function detectOutliers(day) {
   if (day.length < 5) return { core: day, outliers: [], threshold: 0 };
   const picks = [...day.map(r=>r.pda_pick)].sort((a,b)=>a-b);
   const med = picks[Math.floor(picks.length/2)];
   const threshold = med * 0.20;
-  const core1 = day.filter(r => r.pda_pick >= threshold && r.print_labels > 0);
-  if (!core1.length) return { core: day, outliers: [], threshold: Math.round(threshold) };
-  const avg1 = core1.reduce((s,r)=>s+r.pda_pick,0) / core1.length;
-  const core2 = [...core1, ...day.filter(r => r.print_labels === 0 && r.pda_pick >= avg1)];
+
+  const isPermanent = r => PERMANENT.has(getKey(r.operator));
+  const permanent = day.filter(isPermanent);
+  const flex      = day.filter(r => !isPermanent(r));
+
+  // Pass 1: permanent always in + flex with label > 0 and pick >= threshold
+  const core1 = [
+    ...permanent,
+    ...flex.filter(r => r.pda_pick >= threshold && r.print_labels > 0)
+  ];
+  const avg1 = core1.reduce((s,r)=>s+r.pda_pick,0) / (core1.length||1);
+
+  // Pass 2: flex label=0 but pick >= avg1 → keep
+  const core2 = [...core1, ...flex.filter(r => r.print_labels === 0 && r.pda_pick >= avg1)];
   const coreKeys = new Set(core2.map(r=>r.operator));
   const outliers = day.filter(r => !coreKeys.has(r.operator));
   return { core: core2, outliers, threshold: Math.round(threshold) };
