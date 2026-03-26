@@ -17,37 +17,37 @@ body {
 
 .top-bar {
   background:#111; color:#fff;
-  padding:8px 16px;
-  display:flex; align-items:center; gap:10px;
+  padding:12px 20px;
+  display:flex; align-items:center; gap:14px;
   flex-shrink:0;
 }
-.top-title { font-size:.9rem; font-weight:800; color:#fff; white-space:nowrap; flex-shrink:0; }
+.top-title { font-size:1.1rem; font-weight:800; color:#fff; white-space:nowrap; flex-shrink:0; }
 
 select {
   border:1px solid #444; background:#2a2a2a;
-  color:#fff; padding:3px 8px; border-radius:6px;
-  font-family:'Sarabun',sans-serif; font-size:.75rem;
+  color:#fff; padding:5px 10px; border-radius:8px;
+  font-family:'Sarabun',sans-serif; font-size:.85rem;
   outline:none; cursor:pointer; flex-shrink:0;
 }
 select option { background:#222; color:#fff; }
 
 .totals-row {
   display:flex; justify-content:flex-end; align-items:center;
-  gap:16px; flex:1;
+  gap:24px; flex:1;
 }
 .total-block { text-align:center; }
-.total-label { font-size:.62rem; color:#aaa; line-height:1.2; }
-.total-val   { font-size:1rem; font-weight:800; line-height:1.2; }
+.total-label { font-size:.72rem; color:#aaa; line-height:1.3; letter-spacing:.02em; }
+.total-val   { font-size:1.25rem; font-weight:800; line-height:1.2; }
 
 /* ── LEGEND ── */
 .legend {
-  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-  padding:6px 14px; font-size:.68rem; color:#777;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:8px 20px; font-size:.76rem; color:#777;
   background:#fff; border-bottom:1px solid #e8e8e2;
   flex-shrink:0;
 }
 .legend-item { display:flex; align-items:center; gap:5px; white-space:nowrap; }
-.legend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .legend-dot.pick  { background:#16a34a; }
 .legend-dot.label { background:#38bdf8; }
 .legend-dot.pick-low { background:#16a34a; opacity:.3; }
@@ -56,34 +56,38 @@ select option { background:#222; color:#fff; }
 /* ── OUTLIER STRIP ── */
 .outlier-strip {
   display:none; align-items:center; gap:8px; flex-wrap:wrap;
-  padding:4px 14px; font-size:.65rem; color:#999;
+  padding:6px 20px; font-size:.72rem; color:#999;
   background:#faf9f6; border-bottom:1px solid #ece8e0;
   flex-shrink:0;
 }
 .outlier-badge {
   background:#e5e5e0; color:#999; border-radius:20px;
-  padding:2px 8px; font-size:.62rem; font-weight:600;
+  padding:3px 10px; font-size:.7rem; font-weight:600;
 }
 
 /* avg note */
 .avg-note {
-  font-size:.65rem; color:#aaa; text-align:right;
-  padding:3px 4px 5px; flex-shrink:0;
+  font-size:.72rem; color:#aaa; text-align:right;
+  padding:4px 20px 5px; flex-shrink:0;
 }
 
 .list {
-  flex:1; overflow-y:auto; padding:6px 12px 20px;
+  flex:1; overflow-y:auto;
+  padding:6px 12px 8px;
+  display:flex; flex-direction:column;
+  gap:4px;
 }
 
-/* ── ROW ── */
+/* ── ROW — flex:1 fills available height equally ── */
 .row {
   background:#fff; border-radius:10px;
-  padding:6px 12px; margin-bottom:4px;
-  display:flex; align-items:center; gap:6px;
+  padding:0 14px;
+  display:flex; align-items:center; gap:8px;
   box-shadow:0 1px 3px rgba(0,0,0,.06);
   animation:up .22s ease both;
   cursor:pointer; position:relative;
   transition: box-shadow .15s;
+  flex:1; min-height:46px;
 }
 .row:active { box-shadow:0 2px 8px rgba(0,0,0,.1); }
 @keyframes up { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
@@ -107,8 +111,8 @@ select option { background:#222; color:#fff; }
 
 /* ── RANK ── */
 .rank {
-  font-size:.75rem; font-weight:800; color:#ccc;
-  width:22px; text-align:center; flex-shrink:0;
+  font-size:.85rem; font-weight:800; color:#ccc;
+  width:26px; text-align:center; flex-shrink:0;
 }
 .rank.r1 { color:#f5a800; font-size:1rem; }
 .rank.r2 { color:#9e9e9e; font-size:.9rem; }
@@ -116,22 +120,22 @@ select option { background:#222; color:#fff; }
 
 /* ── NAME — fixed width, no flex:1 ── */
 .name {
-  font-size:.85rem; font-weight:700; color:#111;
-  width:68px; min-width:68px; flex-shrink:0;
+  font-size:.95rem; font-weight:700; color:#111;
+  width:72px; min-width:72px; flex-shrink:0;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
 /* ── BARS section ── */
-.bars { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.bars { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
 
 .bar-line { display:flex; align-items:center; gap:5px; }
 
 .bar-wrap {
-  flex:1; height:6px; background:#eee; border-radius:3px;
+  flex:1; height:8px; background:#eee; border-radius:4px;
   overflow:visible; position:relative;
 }
 .bar-fill {
-  height:100%; border-radius:3px;
+  height:100%; border-radius:4px;
   transition:width .55s cubic-bezier(.34,1.56,.64,1), opacity .4s;
 }
 
@@ -143,14 +147,16 @@ select option { background:#222; color:#fff; }
   opacity:.28;
 }
 
-/* LABEL bar — always steady cyan */
+/* LABEL bar — bright if above avg, faded if below */
 .bar-fill.label {
-  background:#38bdf8;
-  opacity:.75;
+  background:#0ea5e9;
+}
+.bar-fill.label.below-avg {
+  opacity:.28;
 }
 
 .avg-tick {
-  position:absolute; top:-2px; width:2px; height:10px;
+  position:absolute; top:-3px; width:2px; height:14px;
   background:rgba(0,0,0,.28); border-radius:1px; z-index:2;
 }
 
@@ -161,18 +167,22 @@ select option { background:#222; color:#fff; }
 }
 .num-row { display:flex; align-items:center; gap:4px; }
 .gap-lbl {
-  font-size:.6rem; font-weight:700; line-height:1;
-  min-width:28px; text-align:right;
+  font-size:.68rem; font-weight:700; line-height:1;
+  min-width:32px; text-align:right;
 }
 .gap-lbl.pos { color:#16a34a; }
 .gap-lbl.neg { color:#f97316; }
 .gap-lbl.zero { color:#ccc; }
 
-/* All numbers same color — neutral #555 */
 .bar-num {
-  font-size:.88rem; font-weight:700; color:#555;
-  min-width:26px; text-align:right; line-height:1;
+  font-size:1rem; font-weight:700;
+  min-width:30px; text-align:right; line-height:1;
+  transition: color .3s;
 }
+.bar-num.pick-bright { color:#16a34a; }
+.bar-num.pick-dim    { color:#16a34a; opacity:.38; }
+.bar-num.label-bright { color:#0ea5e9; }
+.bar-num.label-dim    { color:#0ea5e9; opacity:.38; }
 </style>
 </head>
 <body>
@@ -199,7 +209,8 @@ select option { background:#222; color:#fff; }
 <div class="legend">
   <div class="legend-item"><div class="legend-dot pick"></div> PDA ≥ เฉลี่ย</div>
   <div class="legend-item"><div class="legend-dot pick-low"></div> PDA &lt; เฉลี่ย</div>
-  <div class="legend-item"><div class="legend-dot label"></div> Print Label</div>
+  <div class="legend-item"><div class="legend-dot label"></div> Print ≥ เฉลี่ย</div>
+  <div class="legend-item"><div class="legend-dot label" style="opacity:.28"></div> Print &lt; เฉลี่ย</div>
   <div class="legend-item"><div class="legend-avg-line"></div> ค่าเฉลี่ยทีม</div>
 </div>
 
@@ -225,15 +236,22 @@ const getName = op => {
 const getAllDates = () =>
   [...new Set(RAW.map(r=>r.date))].sort((a,b)=>new Date(b)-new Date(a));
 
-/* ── OUTLIER: pick < 20% of day median ── */
+/* ── OUTLIER: 2-pass logic ──
+   Pass 1: core = pick >= 20% median AND label > 0
+   Pass 2: re-add label=0 workers whose pick >= pass-1 avg
+──────────────────────────────────────── */
 function detectOutliers(day) {
-  if (day.length < 5) return { core: day, outliers: [] };
+  if (day.length < 5) return { core: day, outliers: [], threshold: 0 };
   const picks = [...day.map(r=>r.pda_pick)].sort((a,b)=>a-b);
   const med = picks[Math.floor(picks.length/2)];
   const threshold = med * 0.20;
-  const outliers = day.filter(r => r.pda_pick < threshold);
-  const core     = day.filter(r => r.pda_pick >= threshold);
-  return { core, outliers, threshold: Math.round(threshold), median: Math.round(med) };
+  const core1 = day.filter(r => r.pda_pick >= threshold && r.print_labels > 0);
+  if (!core1.length) return { core: day, outliers: [], threshold: Math.round(threshold) };
+  const avg1 = core1.reduce((s,r)=>s+r.pda_pick,0) / core1.length;
+  const core2 = [...core1, ...day.filter(r => r.print_labels === 0 && r.pda_pick >= avg1)];
+  const coreKeys = new Set(core2.map(r=>r.operator));
+  const outliers = day.filter(r => !coreKeys.has(r.operator));
+  return { core: core2, outliers, threshold: Math.round(threshold) };
 }
 
 /* ── CAT MESSAGES ── */
@@ -278,7 +296,7 @@ function render(date) {
   document.getElementById('sum-people').textContent = allDay.length;
 
   document.getElementById('avg-note').textContent =
-    `ค่าเฉลี่ยทีม (หลังตัด outlier < ${threshold} picks): Pick ${aPick} | Label ${aLabel}`;
+    `ค่าเฉลี่ยทีม (ตัด: pick < ${threshold} หรือ label = 0) — Pick ${aPick} | Label ${aLabel} | ${n} คน`;
 
   const list = document.getElementById('list');
   list.innerHTML = '';
@@ -318,7 +336,7 @@ function render(date) {
         </div>
         <div class="bar-line">
           <div class="bar-wrap">
-            <div class="bar-fill label" style="width:${labelW}%"></div>
+            <div class="bar-fill label ${gapLabel >= 0 ? '' : 'below-avg'}" style="width:${labelW}%"></div>
             <div class="avg-tick" style="left:${avgLW}%"></div>
           </div>
         </div>
@@ -326,11 +344,11 @@ function render(date) {
       <div class="right">
         <div class="num-row">
           <span class="gap-lbl ${gapCls}">${gapSign}${gapPick}</span>
-          <span class="bar-num">${r.pda_pick}</span>
+          <span class="bar-num ${aboveAvg ? 'pick-bright' : 'pick-dim'}">${r.pda_pick}</span>
         </div>
         <div class="num-row">
           <span class="gap-lbl"></span>
-          <span class="bar-num" style="color:#aaa;font-size:.78rem;">${r.print_labels}</span>
+          <span class="bar-num ${gapLabel >= 0 ? 'label-bright' : 'label-dim'}" style="font-size:.88rem;">${r.print_labels}</span>
         </div>
       </div>`;
 
